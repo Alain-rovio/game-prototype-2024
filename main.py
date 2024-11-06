@@ -10,6 +10,7 @@ pygame.init()
 screen_width = 1400
 screen_height = 800
 ground_level = 550
+ground_height = 20
 
 # Colors
 black = (0, 0, 0)
@@ -34,24 +35,20 @@ box_image = pygame.transform.scale(box_image, (50, 50))
 # Bird settings
 bird_pos = [150, 450]
 bird_speed = [0, 0]
+bird_acceleration = [0, 0.5]  # Gravity
+bird_drag = 0.99  # Air resistance
 bird_launched = False
 mouse_start = None
 
 # Box settings
 def create_boxes():
-    return [[random.randint(500, 750), random.randint(350, 500)] for _ in range(5)]
+    return [[random.randint(screen_width // 2, screen_width - 50), random.randint(400, 550)] for _ in range(5)]
 
 boxes = create_boxes()
 
-ground_box = pygame.Rect(0, screen_height - 50, screen_width, 50)
-
-# Global gravity setting
-gravity = 0.5
-
 # Button settings
-button_width = 150
-button_height = 30
-button_rect = pygame.Rect((screen_width - button_width) // 2, 10, button_width, button_height)
+button_width = 200  # Increased width
+button_height = 50  # Increased height
 button_color = green
 button_hover_color = dark_green
 button_text_color = black
@@ -61,6 +58,7 @@ font = pygame.font.Font(None, 36)
 missed_shots = 0
 max_missed_shots = 3
 game_over = False
+you_did_it = False
 
 # Main game loop
 running = True
@@ -71,7 +69,7 @@ while running:
             pygame.quit()
             sys.exit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if button_rect.collidepoint(event.pos):
+            if (game_over or you_did_it) and button_rect.collidepoint(event.pos):
                 boxes = create_boxes()
                 bird_pos = [150, 450]
                 bird_speed = [0, 0]
@@ -79,6 +77,7 @@ while running:
                 mouse_start = None
                 missed_shots = 0
                 game_over = False
+                you_did_it = False
             elif not bird_launched and not game_over:
                 mouse_start = pygame.mouse.get_pos()
         elif event.type == pygame.MOUSEBUTTONUP and not bird_launched and mouse_start and not game_over:
@@ -89,7 +88,12 @@ while running:
             bird_launched = True
 
     if bird_launched and not game_over:
-        bird_speed[1] += gravity
+        # Apply gravity
+        bird_speed[1] += bird_acceleration[1]
+        # Apply drag
+        bird_speed[0] *= bird_drag
+        bird_speed[1] *= bird_drag
+        # Update position
         bird_pos[0] += bird_speed[0]
         bird_pos[1] += bird_speed[1]
 
@@ -104,55 +108,74 @@ while running:
                 bird_pos = [150, 450]
                 mouse_start = None
 
-        # Check for collision with the ground box
-        if bird_rect.colliderect(ground_box):
+        # Check for collision with ground or going beyond the screen
+        if bird_pos[1] >= screen_height - ground_height - 50:
+            bird_pos[1] = screen_height - ground_height - 50
+            screen.blit(bird_image, bird_pos)
+            pygame.display.flip()
+            time.sleep(2)
             bird_speed = [0, 0]
             bird_launched = False
-            time.sleep(3)
             bird_pos = [150, 450]
-            bird_speed = [0, 0]
             mouse_start = None
             missed_shots += 1
             if missed_shots >= max_missed_shots:
                 game_over = True
 
-    # Restart game if all boxes are destroyed
-    if not boxes and not game_over:
-        boxes = create_boxes()
-        bird_pos = [150, 450]
-        bird_speed = [0, 0]
-        bird_launched = False
-        mouse_start = None
+        # Check for going above the screen
+        if bird_pos[1] < 0:
+            bird_pos[1] = 0
+            bird_speed[1] = abs(bird_speed[1])  # Reverse the vertical speed
+
+    # Check if all boxes are destroyed and missed shots are less than max allowed
+    if not boxes and not game_over and missed_shots < max_missed_shots:
+        you_did_it = True
 
     # Fill the screen with white
     screen.fill(white)
+
     # Draw the ground
-    pygame.draw.rect(screen, black, ground_box)
+    pygame.draw.rect(screen, green, (0, screen_height - ground_height, screen_width, ground_height))
+
     # Draw the bird
     screen.blit(bird_image, bird_pos)
 
-    # Draw the boxes
+    # Draw the boxes with small movements
     for box in boxes:
+        box[0] += random.randint(-1, 1)
+        box[1] += random.randint(-1, 1)
+        box[0] = max(screen_width // 2, min(screen_width - 50, box[0]))
+        box[1] = max(400, min(550, box[1]))
         screen.blit(box_image, box)
 
-    # Draw the slingshot trajectory
+    # Draw the slingshot trajectory and strength
     if mouse_start and not bird_launched and not game_over:
         mouse_current = pygame.mouse.get_pos()
         pygame.draw.line(screen, red, (bird_pos[0] + 25, bird_pos[1] + 25), mouse_current, 5)
+        distance = ((mouse_start[0] - mouse_current[0]) ** 2 + (mouse_start[1] - mouse_current[1]) ** 2) ** 0.5
+        strength_text = font.render(f'Strength: {int(distance)}', True, black)
+        screen.blit(strength_text, (10, 50))
 
-    # Draw the restart button
-    if button_rect.collidepoint(mouse_pos):
-        pygame.draw.rect(screen, button_hover_color, button_rect)
-    else:
-        pygame.draw.rect(screen, button_color, button_rect)
-    pygame.draw.rect(screen, black, button_rect, 2)
-    button_text = font.render('Restart Game', True, button_text_color)
-    screen.blit(button_text, (button_rect.x + 10, button_rect.y + 5))
+    # Draw game over text and restart button
+    if game_over or you_did_it:
+        if game_over:
+            game_over_text = font.render('GAME OVER', True, red)
+            screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2 - game_over_text.get_height() // 2))
+        if you_did_it:
+            you_did_it_text = font.render('YOU DID IT!', True, blue)
+            screen.blit(you_did_it_text, (screen_width // 2 - you_did_it_text.get_width() // 2, screen_height // 2 - you_did_it_text.get_height() // 2))
+        button_rect = pygame.Rect((screen_width - button_width) // 2, screen_height // 2 + 50, button_width, button_height)
+        if button_rect.collidepoint(mouse_pos):
+            pygame.draw.rect(screen, button_hover_color, button_rect)
+        else:
+            pygame.draw.rect(screen, button_color, button_rect)
+        pygame.draw.rect(screen, black, button_rect, 2)
+        button_text = font.render('Restart Game', True, button_text_color)
+        screen.blit(button_text, (button_rect.x + 20, button_rect.y + 10))
 
-    # Draw game over text
-    if game_over:
-        game_over_text = font.render('GAME OVER', True, red)
-        screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2 - game_over_text.get_height() // 2))
+    # Draw missed shots count
+    missed_shots_text = font.render(f'{missed_shots}/{max_missed_shots}', True, black)
+    screen.blit(missed_shots_text, (10, 10))
 
     # Update the display
     pygame.display.flip()
