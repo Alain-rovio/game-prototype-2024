@@ -131,8 +131,12 @@ while running:
     # Draw the bird
     screen.blit(bird_image, bird_pos)
 
-    # Draw the boxes
+    # Draw the boxes with small movements
     for box in boxes:
+        box[0] += random.randint(-1, 1)
+        box[1] += random.randint(-1, 1)
+        box[0] = max(screen_width // 2, min(screen_width - 50, box[0]))
+        box[1] = max(400, min(550, box[1]))
         screen.blit(box_image, box)
 
     # Draw the slingshot trajectory and strength
