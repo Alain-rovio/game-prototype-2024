@@ -6,8 +6,8 @@ import random
 pygame.init()
 
 # Screen dimensions
-screen_width = 800
-screen_height = 600
+screen_width = 1400
+screen_height = 800
 
 # Colors
 black = (0, 0, 0)
