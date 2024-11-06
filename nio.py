@@ -67,7 +67,7 @@ while running:
             pygame.quit()
             sys.exit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if game_over and button_rect.collidepoint(event.pos):
+            if (game_over or you_did_it) and button_rect.collidepoint(event.pos):
                 boxes = create_boxes()
                 bird_pos = [150, 450]
                 bird_speed = [0, 0]
@@ -144,10 +144,14 @@ while running:
         screen.blit(strength_text, (10, 50))
 
     # Draw game over text and restart button
-    if game_over:
-        game_over_text = font.render('GAME OVER', True, red)
-        screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2 - game_over_text.get_height() // 2))
-        button_rect = pygame.Rect((screen_width - button_width) // 2, screen_height // 2 + game_over_text.get_height() + 20, button_width, button_height)
+    if game_over or you_did_it:
+        if game_over:
+            game_over_text = font.render('GAME OVER', True, red)
+            screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2 - game_over_text.get_height() // 2))
+        if you_did_it:
+            you_did_it_text = font.render('YOU DID IT!', True, blue)
+            screen.blit(you_did_it_text, (screen_width // 2 - you_did_it_text.get_width() // 2, screen_height // 2 - you_did_it_text.get_height() // 2))
+        button_rect = pygame.Rect((screen_width - button_width) // 2, screen_height // 2 + 50, button_width, button_height)
         if button_rect.collidepoint(mouse_pos):
             pygame.draw.rect(screen, button_hover_color, button_rect)
         else:
@@ -155,11 +159,6 @@ while running:
         pygame.draw.rect(screen, black, button_rect, 2)
         button_text = font.render('Restart Game', True, button_text_color)
         screen.blit(button_text, (button_rect.x + 20, button_rect.y + 10))
-
-    # Draw "You Did It!" banner
-    if you_did_it:
-        you_did_it_text = font.render('YOU DID IT!', True, blue)
-        screen.blit(you_did_it_text, (screen_width // 2 - you_did_it_text.get_width() // 2, screen_height // 2 - you_did_it_text.get_height() // 2))
 
     # Draw missed shots count
     missed_shots_text = font.render(f'{missed_shots}/{max_missed_shots}', True, black)
