@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import time
 
 # Initialize pygame
 pygame.init()
@@ -38,9 +39,11 @@ mouse_start = None
 
 # Box settings
 def create_boxes():
-    return [[random.randint(500, 750), random.randint(400, 550)] for _ in range(5)]
+    return [[random.randint(500, 750), random.randint(350, 500)] for _ in range(5)]
 
 boxes = create_boxes()
+
+ground_box = pygame.Rect(0, screen_height - 50, screen_width, 50)
 
 # Global gravity setting
 gravity = 0.5
@@ -111,6 +114,14 @@ while running:
             if missed_shots >= max_missed_shots:
                 game_over = True
 
+    # Check for collision with the ground box
+    if bird_rect.colliderect(ground_box):
+        bird_speed = [0, 0]
+        bird_launched = False
+        time.sleep(3)
+        bird_pos = [150, 450]
+        bird_speed = [0, 0]
+
     # Restart game if all boxes are destroyed
     if not boxes and not game_over:
         boxes = create_boxes()
@@ -121,7 +132,8 @@ while running:
 
     # Fill the screen with white
     screen.fill(white)
-
+    # Draw the ground
+    pygame.draw.rect(screen, black, ground_box)
     # Draw the bird
     screen.blit(bird_image, bird_pos)
 
