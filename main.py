@@ -104,23 +104,17 @@ while running:
                 bird_pos = [150, 450]
                 mouse_start = None
 
-        # Check for collision with ground
-        if bird_pos[1] >= ground_level:
+        # Check for collision with the ground box
+        if bird_rect.colliderect(ground_box):
             bird_speed = [0, 0]
             bird_launched = False
+            time.sleep(3)
             bird_pos = [150, 450]
+            bird_speed = [0, 0]
             mouse_start = None
             missed_shots += 1
             if missed_shots >= max_missed_shots:
                 game_over = True
-
-    # Check for collision with the ground box
-    if bird_rect.colliderect(ground_box):
-        bird_speed = [0, 0]
-        bird_launched = False
-        time.sleep(3)
-        bird_pos = [150, 450]
-        bird_speed = [0, 0]
 
     # Restart game if all boxes are destroyed
     if not boxes and not game_over:
