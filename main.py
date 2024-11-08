@@ -99,10 +99,10 @@ while RUNNING:
         elif event.type == pygame.MOUSEBUTTONUP and not BIRD_LAUNCHED:
             if MOUSE_START and not GAME_OVER:
                 mouse_end = pygame.mouse.get_pos()
-                distance = ((MOUSE_START[0] - mouse_end[0]) ** 2 + (MOUSE_START[1] - mouse_end[1])
+                distance = ((MOUSE_START[0] - mouse_end[0]) ** 2 + (MOUSE_START[1] - mouse_end[1]) # pylint: disable=unsubscriptable-object
                             ** 2) ** 0.5
-                bird_speed = [(MOUSE_START[0] - mouse_end[0]) / 10, (MOUSE_START[1] - mouse_end[1])
-                              / 10]
+                bird_speed = [(MOUSE_START[0] - mouse_end[0]) / 10, (MOUSE_START[1] - mouse_end[1]) # pylint: disable=unsubscriptable-object
+                            / 10]
                 bird_speed = [speed * (distance / 50) for speed in bird_speed]
                 BIRD_LAUNCHED = True
 
